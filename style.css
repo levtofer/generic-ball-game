@@ -1,16 +1,144 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
-  background: #0d0d0d;
-  color: #eeeeee;
+  background: #eeeeee;
   font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+#page {
+  width: 405px; /* matches our 9:16 portrait baseline width */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+}
+
+/* Safe zones — empty space reserved for platform overlay UI
+   (captions, subscribe buttons, etc. when posted as a clip) */
+#top-safezone {
+  height: 40px;
+  flex-shrink: 0;
+}
+
+#bottom-safezone {
+  height: 40px;
+  flex-shrink: 0;
+}
+
+/* Stage — fixed size, never resizes or repositions regardless of
+   match type or player count. HUD grows underneath it independently. */
+#stage-container {
+  width: 345px;
+  height: 345px;
+  border: 6px solid #cb2957;
+  border-radius: 8px;
+  background: #eeeeee;
+  flex-shrink: 0;
 }
 
 #arena-canvas {
-  background: #1a1a1a;
-  border: 3px solid #444;
-  border-radius: 8px;
   display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* HUD grid — 2 columns, rows added dynamically by JS based on
+   player count. Never stretches to fill unused space (e.g. 1v1
+   leaves the second row's worth of space simply empty). */
+#hud-grid {
+  width: 345px;
+  height: 285px; /* hard-capped: exactly fits 3 rows within total page budget */
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.hud-panel {
+  background: #DDDDDD;
+  border-radius: 6px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden; /* safety net, prevents content from spilling past its row */
+}
+
+.hud-panel.faded {
+  opacity: 0.35;
+}
+
+.hud-panel.dead {
+  opacity: 0.4;
+}
+
+.hud-panel-name {
+  color: #CB2957;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.hud-panel-body {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  min-height: 0; /* allows flex children to shrink below their content size if needed */
+}
+
+.hud-panel-portrait {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.hud-panel-info {
+  flex: 1;
+  background: #EEEEEE;
+  border: 1px solid #CB2957;
+  border-radius: 4px;
+  font-size: 8px;
+  color: #000000;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+/* Overlay shown when player count exceeds the 6-slot cap */
+#hud-grid.hud-overlay-active {
+  position: relative;
+}
+
+#hud-overlay-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+#hud-overlay-content img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
 }

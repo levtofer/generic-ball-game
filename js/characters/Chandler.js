@@ -1,20 +1,16 @@
-// The Chandler — hybrid AoE (wax pool) + weak melee (candlestick).
-// This file currently covers ONLY the candlestick melee portion.
-// Wax pool dripping/DoT logic will be added as a separate piece next,
-// since it involves spawning persistent zone objects (different from
-// instant contact damage).
+// The Chandler — hybrid melee (candlestick, already built) + AoE (wax pool).
+// This file now owns wax pool drip-cooldown logic in addition to the
+// existing contact-based candlestick damage.
 //
 // abilityState fields owned by this module:
-//   (none yet for candlestick — it's stateless, just flat damage on contact)
+//   nextWaxDropAllowedAt -> timestamp (ms) when Chandler can drip again
 
 const Chandler = {
   init(ball) {
-    // No state needed for candlestick — kept here for consistency with
-    // other character modules (and wax pool init will go here too, later)
+    ball.abilityState.nextWaxDropAllowedAt = 0;
   },
 
-  // Call this when CollisionSystem reports this Chandler ball touched an enemy.
-  // Returns true if a hit was actually applied.
+  // Candlestick melee — unchanged from before
   onContact(chandlerBall, enemyBall, nowMs) {
     const cfg = CONFIG.characters.chandler;
     return enemyBall.takeDamage(
@@ -22,5 +18,25 @@ const Chandler = {
       nowMs,
       CONFIG.ball.hitInvulnMs
     );
+  },
+
+  // Call once per frame, per Chandler ball. Returns a new WaxPool instance
+  // if a drip happened this frame, or null otherwise. No target-check needed
+  // here (unlike Farrier/Fletcher) since wax pool is positional, not aimed —
+  // it just drips wherever Chandler currently is, regardless of facing.
+  update(ball, nowMs) {
+    const state = ball.abilityState;
+
+    if (nowMs < state.nextWaxDropAllowedAt) return null;
+
+    const cfg = CONFIG.characters.chandler;
+    state.nextWaxDropAllowedAt = nowMs + cfg.waxDropCooldownMs;
+
+    return new WaxPool({
+      x: ball.position.x,
+      y: ball.position.y,
+      ownerBall: ball,
+      spawnedAtMs: nowMs,
+    });
   },
 };

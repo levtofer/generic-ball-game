@@ -9,7 +9,7 @@ class Arrow {
 
     this.position = Vector2.create(x, y);
     this.velocity = Vector2.fromAngle(angle, cfg.projectileSpeed);
-    this.radius = 6; // placeholder hit-radius
+    this.radius = CONFIG.characters.fletcher.arrowRadius;
 
     this.ownerBall = ownerBall;
     this.damage = damage; // passed in per-arrow, since fan spread may want per-arrow tuning later

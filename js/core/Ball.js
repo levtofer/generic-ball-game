@@ -15,6 +15,8 @@ class Ball {
     this.hp = hp;
     this.alive = true;
 
+    this.lastHitAtMs = -Infinity; // NEW — never hit yet, so flash check always fails safely
+
     // Facing — independent of velocity, driven by nearest-enemy angle each frame
     this.facingAngle = 0; // radians
 
@@ -45,12 +47,13 @@ class Ball {
 
     this.hp -= amount;
     this.invulnUntil = nowMs + invulnMs;
+    this.lastHitAtMs = nowMs; // NEW — track when this ball was last successfully hit
 
     if (this.hp <= 0) {
       this.hp = 0;
       this.alive = false;
     }
-    return true; // damage was actually applied
+    return true;
   }
 
   // Called every frame by AIController — sets facing toward whichever

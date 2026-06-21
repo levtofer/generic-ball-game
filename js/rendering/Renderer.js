@@ -12,16 +12,21 @@ class Renderer {
   }
 
   drawArenaBackground() {
-    this.ctx.fillStyle = "#1a1a1a";
+    this.ctx.fillStyle = "#EEEEEE";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  drawBall(ball) {
+  drawBall(ball, nowMs) {
     if (!ball.alive) return;
 
     const ctx = this.ctx;
 
-    // Ball body — plain circle, never rotates (per spec)
+    const flashDurationMs = 200; // how long the transparency dip lasts
+    const timeSinceHit = nowMs - ball.lastHitAtMs;
+    const opacity = timeSinceHit < flashDurationMs ? 0.5 : 1;
+
+    ctx.globalAlpha = opacity;
+
     ctx.beginPath();
     ctx.arc(ball.position.x, ball.position.y, ball.radius, 0, Math.PI * 2);
     ctx.fillStyle = ball.color;
@@ -30,8 +35,10 @@ class Renderer {
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    ctx.globalAlpha = 1; // reset immediately so HP bar/facing dot aren't also transparent
+
     this._drawHpBar(ball);
-    this._drawFacingIndicator(ball); // placeholder wedge until weapon sprites exist
+    this._drawFacingIndicator(ball);
     this._drawDebugAbilityText(ball);
   }
 
@@ -70,7 +77,7 @@ class Renderer {
       // Placeholder shape: a brown "U" arc standing in for a horseshoe sprite
       ctx.beginPath();
       ctx.arc(0, 0, horseshoe.radius, 0.3 * Math.PI, 1.7 * Math.PI);
-      ctx.strokeStyle = "#8d6e63";
+      ctx.strokeStyle = CONFIG.characters.farrier.color;
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -86,31 +93,64 @@ class Renderer {
     for (const arrow of arrows) {
       if (!arrow.alive) continue;
 
+      const r = arrow.radius;
+
       ctx.save();
       ctx.translate(arrow.position.x, arrow.position.y);
       ctx.rotate(arrow.travelAngle);
 
-      // Placeholder shape: a simple green line with an arrowhead, pointing
-      // along its travel direction (since we rotated the canvas, "forward"
-      // is always the positive x-axis here)
-      ctx.strokeStyle = "#43a047";
-      ctx.fillStyle = "#43a047";
+      ctx.strokeStyle = CONFIG.characters.fletcher.color;
+      ctx.fillStyle = CONFIG.characters.fletcher.color;
       ctx.lineWidth = 2;
 
+      // Shaft length and arrowhead size now scale proportionally with radius,
+      // so changing CONFIG.characters.fletcher.arrowRadius affects both
+      // hit detection AND visuals together
       ctx.beginPath();
-      ctx.moveTo(-10, 0);
-      ctx.lineTo(6, 0);
+      ctx.moveTo(-r * 1.7, 0);
+      ctx.lineTo(r, 0);
       ctx.stroke();
 
-      // Arrowhead triangle at the front tip
       ctx.beginPath();
-      ctx.moveTo(10, 0);
-      ctx.lineTo(4, -3);
-      ctx.lineTo(4, 3);
+      ctx.moveTo(r * 1.7, 0);
+      ctx.lineTo(r * 0.7, -r * 0.5);
+      ctx.lineTo(r * 0.7, r * 0.5);
       ctx.closePath();
       ctx.fill();
 
       ctx.restore();
+    }
+  }
+
+  // Draws all active wax pools as translucent puddles. Fades out slightly
+  // as they approach expiry, giving a visual cue that the hazard is about
+  // to disappear (purely cosmetic, doesn't affect actual hitbox/timing).
+  renderWaxPools(waxPools, nowMs) {
+    const ctx = this.ctx;
+
+    for (const pool of waxPools) {
+      if (!pool.alive) continue;
+
+      const remainingMs = pool.expiresAtMs - nowMs;
+      const fadeWindowMs = 800;
+      const opacity =
+        remainingMs < fadeWindowMs
+          ? Math.max(0.15, remainingMs / fadeWindowMs)
+          : 1;
+
+      ctx.beginPath();
+      ctx.arc(pool.position.x, pool.position.y, pool.radius, 0, Math.PI * 2);
+
+      ctx.globalAlpha = 0.35 * opacity;
+      ctx.fillStyle = CONFIG.characters.chandler.color;
+      ctx.fill();
+
+      ctx.globalAlpha = 0.7 * opacity;
+      ctx.strokeStyle = CONFIG.characters.chandler.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.globalAlpha = 1;
     }
   }
 
@@ -129,6 +169,40 @@ class Renderer {
     ctx.fill();
   }
 
+  clearAndDrawBackground() {
+    this.clear();
+    this.drawArenaBackground();
+  }
+
+  renderWinnerBanner(winnerBall) {
+    const ctx = this.ctx;
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    ctx.textAlign = "center";
+
+    if (winnerBall) {
+      const name = CONFIG.characters[winnerBall.characterId].name;
+
+      ctx.font = "bold 20px sans-serif";
+      ctx.fillStyle = "#EEEEEE";
+      ctx.fillText(name.toUpperCase(), cx, cy - 10);
+
+      ctx.font = "14px sans-serif";
+      ctx.fillStyle = "#CB2957";
+      ctx.fillText("WINS", cx, cy + 16);
+    } else {
+      ctx.font = "bold 20px sans-serif";
+      ctx.fillStyle = "#EEEEEE";
+      ctx.fillText("DRAW", cx, cy);
+    }
+
+    ctx.textAlign = "left"; // reset so it doesn't affect other draw calls
+  }
+
   // Debug overlay — shows ability state as text above the ball.
   // Temporary, for verifying mechanics before real sprites exist.
   _drawDebugAbilityText(ball) {
@@ -138,20 +212,18 @@ class Renderer {
     const state = ball.abilityState;
     const text = state.broken
       ? "BROKEN"
-      : `State: ${state.bladeState}/${state.maxState}`;
+      : `STATE: ${state.bladeState}/${state.maxState}`;
 
     ctx.font = "12px sans-serif";
-    ctx.fillStyle = state.broken ? "#e53935" : "#ffd54f";
+    ctx.fillStyle = state.broken ? "#CB2957" : "#000000";
     ctx.textAlign = "center";
     ctx.fillText(text, ball.position.x, ball.position.y - ball.radius - 22);
     ctx.textAlign = "left"; // reset so other drawing isn't affected
   }
 
-  render(balls) {
-    this.clear();
-    this.drawArenaBackground();
+  render(balls, nowMs) {
     for (const ball of balls) {
-      this.drawBall(ball);
+      this.drawBall(ball, nowMs);
     }
   }
 }

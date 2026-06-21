@@ -13,13 +13,13 @@ class Horseshoe {
 
     this.position = Vector2.create(x, y);
     this.velocity = Vector2.fromAngle(angle, cfg.projectileSpeed);
-    this.radius = 10;
+    this.radius = CONFIG.characters.farrier.horseshoeRadius;
 
     this.ownerBall = ownerBall;
     this.alive = true;
 
     this.wallBounceCount = 0;
-    this.hasHit = false; // becomes true the moment ANY hit lands, for the horseshoe's whole life
+    this.hitThisLeg = new Set();
 
     this.spinAngle = 0; // purely visual
   }
@@ -67,7 +67,7 @@ class Horseshoe {
       this.velocity = Vector2.setMagnitude(this.velocity, speed);
 
       this.wallBounceCount += 1;
-      this.hitThisLeg.clear(); // fresh leg, every ball is hittable again
+      this.hitThisLeg.clear();
 
       if (this.wallBounceCount >= 2) {
         this.alive = false; // second wall bounce = delete, no return-to-Farrier
@@ -80,11 +80,15 @@ class Horseshoe {
   // regardless of remaining bounces. Bounces still happen visually/physically
   // (it keeps bouncing until its 2-bounce lifespan ends), but it's now
   // harmless — purely a "missed" object coasting to its own deletion.
+  // Returns true if a NEW hit landed (caller should know damage was applied).
+  // Per-target, per-leg protection: same ball can't be hit twice within
+  // one leg, but resets on wall bounce, and different balls in the same
+  // leg are each hittable once.
   checkHit(targetBall, nowMs) {
     if (!this.alive) return false;
-    if (this.hasHit) return false; // already used up its one hit, ever
     if (targetBall === this.ownerBall) return false;
     if (!targetBall.alive) return false;
+    if (this.hitThisLeg.has(targetBall)) return false;
 
     const dist = Vector2.distance(this.position, targetBall.position);
     if (dist >= this.radius + targetBall.radius) return false;
@@ -95,9 +99,9 @@ class Horseshoe {
       CONFIG.ball.hitInvulnMs,
     );
 
-    if (!applied) return false; // target was invuln, hit didn't count, horseshoe still "live"
+    if (!applied) return false;
 
-    this.hasHit = true; // spent — no further damage capability, ever
+    this.hitThisLeg.add(targetBall);
     return true;
   }
 }

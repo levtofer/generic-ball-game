@@ -1,28 +1,45 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Weapon Ball Arena</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <h1>Weapon Ball Arena — Phase 1: Physics Sandbox</h1>
-    <canvas id="arena-canvas"></canvas>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generic Ball Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="page">
 
-    <!-- Load order matters: dependencies first, main.js last -->
-    <script src="js/config.js"></script>
-    <script src="js/core/Vector2.js"></script>
-    <script src="js/core/Ball.js"></script>
-    <script src="js/core/Arena.js"></script>
-    <script src="js/core/CollisionSystem.js"></script>
-    <script src="js/ai/AIController.js"></script>
-    <script src="js/characters/Lapidary.js"></script>
-    <script src="js/characters/Chandler.js"></script>
-    <script src="js/projectiles/Horseshoe.js"></script>
-    <script src="js/characters/Farrier.js"></script>
-    <script src="js/projectiles/Arrow.js"></script>
-    <script src="js/characters/Fletcher.js"></script>
-    <script src="js/rendering/Renderer.js"></script>
-    <script src="js/main.js"></script>
-  </body>
+    <div id="top-safezone"></div>
+
+    <div id="stage-container">
+      <canvas id="arena-canvas"></canvas>
+    </div>
+
+    <div id="hud-grid">
+      <!-- Panels generated dynamically by JS based on match player count -->
+    </div>
+
+    <div id="bottom-safezone"></div>
+
+  </div>
+
+  <!-- Load order: dependencies first, main.js last -->
+  <script src="js/config.js"></script>
+  <script src="js/core/Vector2.js"></script>
+  <script src="js/core/Ball.js"></script>
+  <script src="js/core/Arena.js"></script>
+  <script src="js/core/MatchManager.js"></script>
+  <script src="js/core/CollisionSystem.js"></script>
+  <script src="js/ai/AIController.js"></script>
+  <script src="js/characters/Lapidary.js"></script>
+  <script src="js/characters/Farrier.js"></script>
+  <script src="js/characters/Fletcher.js"></script>
+  <script src="js/characters/Chandler.js"></script>
+  <script src="js/projectiles/Horseshoe.js"></script>
+  <script src="js/projectiles/Arrow.js"></script>
+  <script src="js/projectiles/WaxPool.js"></script>
+  <script src="js/rendering/Renderer.js"></script>
+  <script src="js/rendering/HudRenderer.js"></script>
+  <script src="js/main.js"></script>
+</body>
 </html>

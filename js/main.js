@@ -11,13 +11,21 @@
 
   // ── Spawn balls ──────────────────────────────────────────
   // Phase 1: just enough to test physics. 4 characters, 1 ball each.
-  const characterIds = ["lapidary", "farrier", "fletcher", "chandler"];
-  const colors = {
-    lapidary: "#9c27b0",
-    farrier: "#8d6e63",
-    fletcher: "#43a047",
-    chandler: "#fbc02d",
-  };
+  // const characterIds = ["lapidary", "farrier"];
+  const characterIds = [
+    "lapidary",
+    "farrier",
+    "fletcher",
+    "chandler",
+    "lapidary",
+    "farrier",
+    "fletcher",
+    "chandler",
+    "lapidary",
+    "farrier",
+    "fletcher",
+    "chandler",
+  ];
 
   function randomLaunchVelocity() {
     const angle = Math.random() * Math.PI * 2;
@@ -35,6 +43,7 @@
 
   let activeHorseshoes = [];
   let activeArrows = [];
+  let activeWaxPools = [];
 
   const balls = characterIds.map((id) => {
     const spawn = randomSpawnPosition();
@@ -46,7 +55,7 @@
       radius: CONFIG.ball.radius,
       hp: cfg.hp,
       characterId: id,
-      color: colors[id],
+      color: cfg.color,
     });
   });
 
@@ -65,71 +74,103 @@
     }
   }
 
+  MatchManager.reset();
+  HudRenderer.createPanels(balls);
+
   // ── Game loop ────────────────────────────────────────────
   let lastTime = performance.now();
 
   function gameLoop(now) {
-    const deltaSeconds = Math.min((now - lastTime) / 1000, 0.05); // clamp to avoid huge jumps on tab-switch
+    const deltaSeconds = Math.min((now - lastTime) / 1000, 0.05);
     lastTime = now;
     const nowMs = now;
 
-    // Update physics
+    // Physics always runs, win or not, so the last ball keeps bouncing
     for (const ball of balls) {
       ball.update(deltaSeconds);
     }
 
-    for (const ball of balls) {
-      if (ball.characterId === "lapidary") {
-        Lapidary.update(ball, nowMs);
-      }
-    }
-
-    for (const ball of balls) {
-      if (ball.characterId === "farrier") {
-        const newHorseshoe = Farrier.update(
-          ball,
-          balls,
-          nowMs,
-          activeHorseshoes.length,
-        );
-        if (newHorseshoe) {
-          activeHorseshoes.push(newHorseshoe);
+    if (!MatchManager.isFinished()) {
+      // All character ability logic (Lapidary, Farrier, Fletcher, Chandler updates)
+      // only runs while the match is still actively playing
+      for (const ball of balls) {
+        if (ball.characterId === "lapidary" && ball.alive) {
+          Lapidary.update(ball, nowMs);
         }
       }
-    }
 
-    for (const ball of balls) {
-      if (ball.characterId === "fletcher") {
-        const newArrows = Fletcher.update(ball, balls, nowMs);
-        activeArrows.push(...newArrows);
-      }
-    }
-    for (const horseshoe of activeHorseshoes) {
-      horseshoe.update(deltaSeconds, arena);
-    }
-
-    for (const arrow of activeArrows) {
-      arrow.update(deltaSeconds, arena);
-    }
-
-    for (const horseshoe of activeHorseshoes) {
       for (const ball of balls) {
-        horseshoe.checkHit(ball, nowMs);
+        if (ball.characterId === "farrier" && ball.alive) {
+          const newHorseshoe = Farrier.update(
+            ball,
+            balls,
+            nowMs,
+            activeHorseshoes.length,
+          );
+          if (newHorseshoe) activeHorseshoes.push(newHorseshoe);
+        }
       }
-    }
 
-    for (const arrow of activeArrows) {
       for (const ball of balls) {
-        arrow.checkHit(ball, nowMs);
+        if (ball.characterId === "fletcher" && ball.alive) {
+          const newArrows = Fletcher.update(ball, balls, nowMs);
+          activeArrows.push(...newArrows);
+        }
+      }
+
+      for (const ball of balls) {
+        if (ball.characterId === "chandler" && ball.alive) {
+          const newWaxPool = Chandler.update(ball, nowMs);
+          if (newWaxPool) activeWaxPools.push(newWaxPool);
+        }
+      }
+
+      for (const horseshoe of activeHorseshoes) {
+        horseshoe.update(deltaSeconds, arena);
+      }
+
+      for (const arrow of activeArrows) {
+        arrow.update(deltaSeconds, arena);
+      }
+
+      for (const waxPool of activeWaxPools) {
+        waxPool.update(nowMs);
+      }
+
+      for (const horseshoe of activeHorseshoes) {
+        for (const ball of balls) {
+          horseshoe.checkHit(ball, nowMs);
+        }
+      }
+
+      for (const arrow of activeArrows) {
+        for (const ball of balls) {
+          arrow.checkHit(ball, nowMs);
+        }
+      }
+
+      for (const waxPool of activeWaxPools) {
+        for (const ball of balls) {
+          waxPool.checkOverlap(ball, nowMs);
+        }
+      }
+
+      activeHorseshoes = activeHorseshoes.filter((h) => h.alive);
+      activeArrows = activeArrows.filter((a) => a.alive);
+      activeWaxPools = activeWaxPools.filter((w) => w.alive);
+
+      MatchManager.update(balls);
+      if (MatchManager.justFinished) {
+        activeHorseshoes = [];
+        activeArrows = [];
+        activeWaxPools = [];
+        MatchManager.justFinished = false; // consume the flag so this only runs once
       }
     }
 
-    activeHorseshoes = activeHorseshoes.filter((h) => h.alive);
-    activeArrows = activeArrows.filter(a => a.alive);
-
+    // Wall/ball collision always runs too, so the winner keeps bouncing naturally
     AIController.updateFacing(balls, deltaSeconds);
 
-    // Resolve collisions (wall first, then ball-vs-ball)
     for (const ball of balls) {
       arena.resolveWallCollision(ball);
     }
@@ -145,10 +186,17 @@
         Chandler.onContact(ballB, ballA, nowMs);
     }
 
-    // Draw
-    renderer.render(balls);
+    // Rendering always happens, even when finished, so the final frame stays visible
+    renderer.clearAndDrawBackground();
+    renderer.renderWaxPools(activeWaxPools, nowMs);
+    renderer.render(balls, nowMs);
     renderer.renderHorseshoes(activeHorseshoes);
     renderer.renderArrows(activeArrows);
+    HudRenderer.updatePanels(balls);
+
+    if (MatchManager.isFinished()) {
+      renderer.renderWinnerBanner(MatchManager.winner);
+    }
 
     requestAnimationFrame(gameLoop);
   }
