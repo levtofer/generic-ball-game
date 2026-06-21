@@ -45,12 +45,17 @@ const Lapidary = {
   // Call this when CollisionSystem reports this Lapidary ball touched an enemy.
   // Returns true if a hit was actually applied (i.e. blade exists, target wasn't invuln).
   onContact(lapidaryBall, enemyBall, nowMs) {
+    if (lapidaryBall.isSameTeam(enemyBall)) return false; // NEW — no friendly fire
     const state = lapidaryBall.abilityState;
 
     if (state.broken) return false; // no blade in hand, contact does nothing
 
     const damage = this._currentDamage(lapidaryBall);
-    const applied = enemyBall.takeDamage(damage, nowMs, CONFIG.ball.hitInvulnMs);
+    const applied = enemyBall.takeDamage(
+      damage,
+      nowMs,
+      CONFIG.ball.hitInvulnMs,
+    );
 
     if (!applied) return false; // enemy was in their own invuln window, hit didn't land
 

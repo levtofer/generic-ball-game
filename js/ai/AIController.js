@@ -32,8 +32,9 @@ const AIController = {
 
     for (const other of balls) {
       if (other === self || !other.alive) continue;
+      if (other.teamId === self.teamId) continue; // NEW — skip teammates entirely
 
-      const dist = Vector2.distance(self.position, other.position);
+      const dist = Vector2.distance(self.position, other.position); 
 
       if (other === currentTarget) {
         currentTargetDist = dist;
@@ -72,7 +73,7 @@ const AIController = {
     if (!nearest) return false;
 
     const angleToTarget = Vector2.angle(
-      Vector2.subtract(nearest.position, self.position)
+      Vector2.subtract(nearest.position, self.position),
     );
 
     let diff = Math.abs(angleToTarget - self.facingAngle);

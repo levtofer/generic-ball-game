@@ -1,33 +1,56 @@
-// Tracks match state — whether the match is still running, who won (if
-// anyone), and exposes a simple check each frame to detect end conditions.
-// Doesn't touch rendering or physics directly; main.js reacts to its state.
-
 const MatchManager = {
-  state: "playing",
+  state: "countdown", // "countdown" | "playing" | "finished"
   winner: null,
-  justFinished: false, // NEW
+  winningTeam: null,
+  justFinished: false,
+  countdownStartedAt: 0,
+  finishedAtMs: 0, // NEW
+  returnedToMenu: false, // NEW
 
   reset() {
-    this.state = "playing";
+    this.state = "countdown";
     this.winner = null;
-    this.justFinished = false; // NEW
+    this.winningTeam = null;
+    this.justFinished = false;
+    this.countdownStartedAt = performance.now();
+    this.returnedToMenu = false; // NEW
   },
 
-  // Call once per frame, after all damage/collisions for this frame have
-  // resolved. Checks how many balls are still alive and updates match state.
-  update(balls) {
-    if (this.state === "finished") return;
-
-    const aliveBalls = balls.filter((b) => b.alive);
-
-    if (aliveBalls.length <= 1) {
-      this.state = "finished";
-      this.winner = aliveBalls.length === 1 ? aliveBalls[0] : null;
-      this.justFinished = true; // NEW — one-frame flag, main.js checks + clears this
-    }
+  isCountingDown() {
+    return this.state === "countdown";
   },
 
   isFinished() {
     return this.state === "finished";
+  },
+
+  // Call once per frame during countdown. Transitions to "playing" once
+  // the countdown duration has elapsed.
+  updateCountdown(nowMs, durationMs) {
+    if (this.state !== "countdown") return;
+    if (nowMs - this.countdownStartedAt >= durationMs) {
+      this.state = "playing";
+    }
+  },
+
+  update(balls) {
+    if (this.state !== "playing") return;
+
+    const aliveBalls = balls.filter((b) => b.alive);
+    const aliveTeams = new Set(aliveBalls.map((b) => b.teamId));
+
+    if (aliveTeams.size <= 1) {
+      this.state = "finished";
+      this.justFinished = true;
+      this.finishedAtMs = performance.now(); // NEW
+
+      if (aliveTeams.size === 0) {
+        this.winner = null;
+        this.winningTeam = null;
+      } else {
+        this.winningTeam = [...aliveTeams][0];
+        this.winner = aliveBalls[0];
+      }
+    }
   },
 };

@@ -34,6 +34,7 @@ class WaxPool {
   checkOverlap(targetBall, nowMs) {
     if (!this.alive) return false;
     if (targetBall === this.ownerBall) return false;
+    if (this.ownerBall.isSameTeam(targetBall)) return false; // NEW
     if (!targetBall.alive) return false;
 
     const dist = Vector2.distance(this.position, targetBall.position);

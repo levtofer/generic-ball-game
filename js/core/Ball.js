@@ -2,14 +2,18 @@
 // Holds physics state (position/velocity), combat state (HP, invuln window),
 // and facing (which gets driven by AIController later — not set here).
 
+let _nextBallId = 0;
+
 class Ball {
-  constructor({ x, y, velocity, radius, hp, characterId, color }) {
+  constructor({ x, y, velocity, radius, hp, characterId, color, teamId }) {
+    this.id = _nextBallId++; // unique per ball instance, even if characterId repeats
     this.position = Vector2.create(x, y);
     this.velocity = velocity; // {x, y}, already at launchSpeed magnitude
     this.radius = radius;
+    this.teamId = teamId; // NEW — "red" or "blue"
 
     this.characterId = characterId; // "lapidary" | "farrier" | "fletcher" | "chandler"
-    this.color = color;             // placeholder fill color until real sprites exist
+    this.color = color; // placeholder fill color until real sprites exist
 
     this.maxHp = hp;
     this.hp = hp;
@@ -34,8 +38,12 @@ class Ball {
     if (!this.alive) return;
     this.position = Vector2.add(
       this.position,
-      Vector2.scale(this.velocity, deltaSeconds)
+      Vector2.scale(this.velocity, deltaSeconds),
     );
+  }
+
+  isSameTeam(otherBall) {
+    return this.teamId === otherBall.teamId;
   }
 
   canBeDamaged(nowMs) {
@@ -58,7 +66,7 @@ class Ball {
 
   // Called every frame by AIController — sets facing toward whichever
   // enemy ball is currently closest, recalculated continuously
- // Smoothly rotates facing toward the target angle at a max turn rate,
+  // Smoothly rotates facing toward the target angle at a max turn rate,
   // instead of snapping instantly. Called every frame by AIController.
   setFacingToward(targetPosition, deltaSeconds) {
     const direction = Vector2.subtract(targetPosition, this.position);
@@ -67,7 +75,7 @@ class Ball {
     this.facingAngle = this._rotateToward(
       this.facingAngle,
       targetAngle,
-      CONFIG.ball.facingTurnSpeedRad * deltaSeconds
+      CONFIG.ball.facingTurnSpeedRad * deltaSeconds,
     );
   }
 

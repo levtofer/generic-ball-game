@@ -9,14 +9,14 @@ const HudRenderer = {
   // Builds one .hud-panel div per ball (up to the cap), appends to #hud-grid.
   createPanels(balls) {
     const hudGrid = document.getElementById("hud-grid");
-    hudGrid.innerHTML = ""; // clear any previous match's panels
+    hudGrid.innerHTML = "";
 
     const visibleBalls = balls.slice(0, this.maxVisibleSlots);
 
     for (const ball of visibleBalls) {
       const panel = document.createElement("div");
       panel.className = "hud-panel";
-      panel.dataset.ballId = ball.characterId; // simple way to look it up later
+      panel.dataset.ballId = ball.id; // CHANGED — unique id, not characterId
 
       const nameEl = document.createElement("div");
       nameEl.className = "hud-panel-name";
@@ -70,7 +70,7 @@ const HudRenderer = {
 
     for (const ball of visibleBalls) {
       const panel = document.querySelector(
-        `.hud-panel[data-ball-id="${ball.characterId}"]`
+        `.hud-panel[data-ball-id="${ball.id}"]`, // CHANGED
       );
       if (!panel) continue;
 

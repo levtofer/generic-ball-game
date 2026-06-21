@@ -12,11 +12,12 @@ const Chandler = {
 
   // Candlestick melee — unchanged from before
   onContact(chandlerBall, enemyBall, nowMs) {
+    if (chandlerBall.isSameTeam(enemyBall)) return false; // NEW
     const cfg = CONFIG.characters.chandler;
     return enemyBall.takeDamage(
       cfg.candlestickDamage,
       nowMs,
-      CONFIG.ball.hitInvulnMs
+      CONFIG.ball.hitInvulnMs,
     );
   },
 

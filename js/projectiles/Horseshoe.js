@@ -87,6 +87,7 @@ class Horseshoe {
   checkHit(targetBall, nowMs) {
     if (!this.alive) return false;
     if (targetBall === this.ownerBall) return false;
+    if (this.ownerBall.isSameTeam(targetBall)) return false; // NEW
     if (!targetBall.alive) return false;
     if (this.hitThisLeg.has(targetBall)) return false;
 

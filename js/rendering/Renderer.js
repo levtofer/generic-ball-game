@@ -165,7 +165,7 @@ class Renderer {
 
     ctx.beginPath();
     ctx.arc(px, py, 5, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffd54f";
+    ctx.fillStyle = ball.teamId === "red" ? "#e53935" : "#1e88e5"; // red or blue
     ctx.fill();
   }
 
@@ -174,7 +174,7 @@ class Renderer {
     this.drawArenaBackground();
   }
 
-  renderWinnerBanner(winnerBall) {
+  renderWinnerBanner(winnerBall, winningTeam, balls) {
     const ctx = this.ctx;
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
@@ -184,23 +184,65 @@ class Renderer {
 
     ctx.textAlign = "center";
 
-    if (winnerBall) {
-      const name = CONFIG.characters[winnerBall.characterId].name;
+    if (winningTeam) {
+      const teamSize = balls.filter((b) => b.teamId === winningTeam).length;
 
       ctx.font = "bold 20px sans-serif";
-      ctx.fillStyle = "#EEEEEE";
-      ctx.fillText(name.toUpperCase(), cx, cy - 10);
+      ctx.fillStyle = winningTeam === "red" ? "#e53935" : "#1e88e5";
 
-      ctx.font = "14px sans-serif";
-      ctx.fillStyle = "#CB2957";
+      if (teamSize === 1) {
+        // 1v1 / FFA-style — show the specific character's name instead
+        const name = CONFIG.characters[winnerBall.characterId].name;
+        ctx.fillText(name.toUpperCase(), cx, cy - 10);
+      } else {
+        // Real team match — show team name instead of one arbitrary member
+        ctx.fillText(`${winningTeam.toUpperCase()} TEAM`, cx, cy - 10);
+      }
+
+      ctx.font = "bold 20px sans-serif";
+      ctx.fillStyle = "#000000";
       ctx.fillText("WINS", cx, cy + 16);
     } else {
       ctx.font = "bold 20px sans-serif";
-      ctx.fillStyle = "#EEEEEE";
+      ctx.fillStyle = "#000000";
       ctx.fillText("DRAW", cx, cy);
     }
 
-    ctx.textAlign = "left"; // reset so it doesn't affect other draw calls
+    ctx.textAlign = "left";
+  }
+
+  // Draws "3", "2", "1", "GO!" with a simple pop-in scale animation,
+  // based on elapsed time since countdown started.
+  renderCountdown(nowMs, startedAtMs, durationMs) {
+    const ctx = this.ctx;
+    const cx = this.canvas.width / 2;
+    const cy = this.canvas.height / 2;
+
+    const elapsed = nowMs - startedAtMs;
+    const stepMs = durationMs / 4; // 4 steps: 3, 2, 1, GO
+    const stepIndex = Math.min(Math.floor(elapsed / stepMs), 3);
+    const labels = ["3", "2", "1", "GO!"];
+    const text = labels[stepIndex];
+
+    // Pop animation: scale from 1.4 down to 1.0 over each step's duration
+    const timeIntoStep = elapsed - stepIndex * stepMs;
+    const progress = Math.min(timeIntoStep / (stepMs * 0.3), 1); // quick pop, settles fast
+    const scale = 1.4 - 0.4 * progress;
+
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    ctx.font = "bold 48px sans-serif";
+    ctx.fillStyle = "#CB2957";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 0, 0);
+
+    ctx.restore();
   }
 
   // Debug overlay — shows ability state as text above the ball.

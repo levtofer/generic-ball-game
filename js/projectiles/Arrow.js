@@ -21,7 +21,10 @@ class Arrow {
   update(deltaSeconds, arena) {
     if (!this.alive) return;
 
-    this.position = Vector2.add(this.position, Vector2.scale(this.velocity, deltaSeconds));
+    this.position = Vector2.add(
+      this.position,
+      Vector2.scale(this.velocity, deltaSeconds),
+    );
 
     // No bounce — touching any wall just kills the arrow outright
     const r = this.radius;
@@ -39,12 +42,17 @@ class Arrow {
   checkHit(targetBall, nowMs) {
     if (!this.alive) return false;
     if (targetBall === this.ownerBall) return false;
+    if (this.ownerBall.isSameTeam(targetBall)) return false; // NEW
     if (!targetBall.alive) return false;
 
     const dist = Vector2.distance(this.position, targetBall.position);
     if (dist >= this.radius + targetBall.radius) return false;
 
-    const applied = targetBall.takeDamage(this.damage, nowMs, CONFIG.ball.hitInvulnMs);
+    const applied = targetBall.takeDamage(
+      this.damage,
+      nowMs,
+      CONFIG.ball.hitInvulnMs,
+    );
 
     if (!applied) return false; // target was invuln, hit didn't count, arrow keeps flying
 

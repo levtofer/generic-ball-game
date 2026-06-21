@@ -142,3 +142,109 @@ body {
   object-fit: contain;
   border-radius: 4px;
 }
+
+#menu-screen {
+  background: #EEEEEE;
+  min-height: 100vh;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  font-family: sans-serif;
+}
+
+#menu-screen h1 {
+  color: #000000;
+  text-transform: uppercase;
+}
+
+.team-config {
+  width: 100%;
+  max-width: 500px;
+  background: #DDDDDD;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.team-label {
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.red-text {
+  color: #e53935;
+}
+
+.blue-text {
+  color: #1e88e5;
+}
+
+.team-size-dropdown {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+.character-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.character-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #EEEEEE;
+  border: 1px solid #CB2957;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.character-card-portrait {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.character-card select {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+#start-match-btn {
+  background: #CB2957;
+  color: #EEEEEE;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+#start-match-btn:hover {
+  opacity: 0.85;
+}
+
+#menu-screen,
+#page {
+  transition: opacity 0.4s ease;
+}
+
+#menu-screen.hidden,
+#page.hidden {
+  display: none;
+}
+
+#menu-screen.fade-out,
+#page.fade-out {
+  opacity: 0;
+}

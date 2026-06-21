@@ -1,45 +1,90 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Generic Ball Game</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div id="page">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generic Ball Game</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="menu-screen">
+      <h1>Generic Ball Game</h1>
 
-    <div id="top-safezone"></div>
+      <div class="team-config" data-team="red">
+        <h2 class="team-label red-text">Red Team</h2>
+        <label>
+          Team Size:
+          <select class="team-size-dropdown" data-team="red">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <div class="character-card-list" data-team="red"></div>
+      </div>
 
-    <div id="stage-container">
-      <canvas id="arena-canvas"></canvas>
+      <div class="team-config" data-team="blue">
+        <h2 class="team-label blue-text">Blue Team</h2>
+        <label>
+          Team Size:
+          <select class="team-size-dropdown" data-team="blue">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <div class="character-card-list" data-team="blue"></div>
+      </div>
+
+      <button id="start-match-btn">Start Match</button>
+    </div>
+    <div id="page" class="hidden">
+      <div id="top-safezone"></div>
+
+      <div id="stage-container">
+        <canvas id="arena-canvas"></canvas>
+      </div>
+
+      <div id="hud-grid">
+        <!-- Panels generated dynamically by JS based on match player count -->
+      </div>
+
+      <div id="bottom-safezone"></div>
     </div>
 
-    <div id="hud-grid">
-      <!-- Panels generated dynamically by JS based on match player count -->
-    </div>
-
-    <div id="bottom-safezone"></div>
-
-  </div>
-
-  <!-- Load order: dependencies first, main.js last -->
-  <script src="js/config.js"></script>
-  <script src="js/core/Vector2.js"></script>
-  <script src="js/core/Ball.js"></script>
-  <script src="js/core/Arena.js"></script>
-  <script src="js/core/MatchManager.js"></script>
-  <script src="js/core/CollisionSystem.js"></script>
-  <script src="js/ai/AIController.js"></script>
-  <script src="js/characters/Lapidary.js"></script>
-  <script src="js/characters/Farrier.js"></script>
-  <script src="js/characters/Fletcher.js"></script>
-  <script src="js/characters/Chandler.js"></script>
-  <script src="js/projectiles/Horseshoe.js"></script>
-  <script src="js/projectiles/Arrow.js"></script>
-  <script src="js/projectiles/WaxPool.js"></script>
-  <script src="js/rendering/Renderer.js"></script>
-  <script src="js/rendering/HudRenderer.js"></script>
-  <script src="js/main.js"></script>
-</body>
+    <!-- Load order: dependencies first, main.js last -->
+    <script src="js/config.js"></script>
+    <script src="js/menu/ScreenManager.js"></script>
+    <script src="js/menu/MenuController.js"></script>
+    <script src="js/core/Vector2.js"></script>
+    <script src="js/core/Ball.js"></script>
+    <script src="js/core/Arena.js"></script>
+    <script src="js/core/MatchManager.js"></script>
+    <script src="js/core/CollisionSystem.js"></script>
+    <script src="js/ai/AIController.js"></script>
+    <script src="js/characters/Lapidary.js"></script>
+    <script src="js/characters/Farrier.js"></script>
+    <script src="js/characters/Fletcher.js"></script>
+    <script src="js/characters/Chandler.js"></script>
+    <script src="js/projectiles/Horseshoe.js"></script>
+    <script src="js/projectiles/Arrow.js"></script>
+    <script src="js/projectiles/WaxPool.js"></script>
+    <script src="js/rendering/Renderer.js"></script>
+    <script src="js/rendering/HudRenderer.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>
