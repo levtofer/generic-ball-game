@@ -32,11 +32,11 @@ const CONFIG = {
     farrier: {
       name: "The Farrier",
       hp: 110,
-      damage: 8,
-      throwCooldownMs: 1500, // 1–2s range, sitting in the middle
+      damage: 5, // was 8, lowered since Farrier was overperforming
+      maxActiveHorseshoes: 2, // new — hard cap on simultaneous horseshoes
+      throwCooldownMs: 1500,
       projectileSpeed: 260,
-      hitsBeforeReturn: 2, // horseshoe returns to Farrier after hitting enemies twice
-      spinDegPerSec: 540, // visual spin speed while in flight
+      spinDegPerSec: 540,
     },
 
     fletcher: {

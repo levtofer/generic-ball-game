@@ -33,6 +33,9 @@
     };
   }
 
+  let activeHorseshoes = [];
+  let activeArrows = [];
+
   const balls = characterIds.map((id) => {
     const spawn = randomSpawnPosition();
     const cfg = CONFIG.characters[id];
@@ -48,13 +51,17 @@
   });
 
   for (const ball of balls) {
-    for (const ball of balls) {
-      if (ball.characterId === "lapidary") {
-        Lapidary.init(ball);
-      }
-      if (ball.characterId === "chandler") {
-        Chandler.init(ball);
-      }
+    if (ball.characterId === "lapidary") {
+      Lapidary.init(ball);
+    }
+    if (ball.characterId === "chandler") {
+      Chandler.init(ball);
+    }
+    if (ball.characterId === "farrier") {
+      Farrier.init(ball);
+    }
+    if (ball.characterId === "fletcher") {
+      Fletcher.init(ball);
     }
   }
 
@@ -77,6 +84,49 @@
       }
     }
 
+    for (const ball of balls) {
+      if (ball.characterId === "farrier") {
+        const newHorseshoe = Farrier.update(
+          ball,
+          balls,
+          nowMs,
+          activeHorseshoes.length,
+        );
+        if (newHorseshoe) {
+          activeHorseshoes.push(newHorseshoe);
+        }
+      }
+    }
+
+    for (const ball of balls) {
+      if (ball.characterId === "fletcher") {
+        const newArrows = Fletcher.update(ball, balls, nowMs);
+        activeArrows.push(...newArrows);
+      }
+    }
+    for (const horseshoe of activeHorseshoes) {
+      horseshoe.update(deltaSeconds, arena);
+    }
+
+    for (const arrow of activeArrows) {
+      arrow.update(deltaSeconds, arena);
+    }
+
+    for (const horseshoe of activeHorseshoes) {
+      for (const ball of balls) {
+        horseshoe.checkHit(ball, nowMs);
+      }
+    }
+
+    for (const arrow of activeArrows) {
+      for (const ball of balls) {
+        arrow.checkHit(ball, nowMs);
+      }
+    }
+
+    activeHorseshoes = activeHorseshoes.filter((h) => h.alive);
+    activeArrows = activeArrows.filter(a => a.alive);
+
     AIController.updateFacing(balls, deltaSeconds);
 
     // Resolve collisions (wall first, then ball-vs-ball)
@@ -97,6 +147,8 @@
 
     // Draw
     renderer.render(balls);
+    renderer.renderHorseshoes(activeHorseshoes);
+    renderer.renderArrows(activeArrows);
 
     requestAnimationFrame(gameLoop);
   }

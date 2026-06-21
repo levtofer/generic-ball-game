@@ -55,6 +55,65 @@ class Renderer {
     ctx.strokeRect(x, y, barWidth, barHeight);
   }
 
+  // Draws all active horseshoes. Each one spins continuously (visual only,
+  // doesn't affect hit detection) regardless of travel direction, per spec.
+  renderHorseshoes(horseshoes) {
+    const ctx = this.ctx;
+
+    for (const horseshoe of horseshoes) {
+      if (!horseshoe.alive) continue;
+
+      ctx.save();
+      ctx.translate(horseshoe.position.x, horseshoe.position.y);
+      ctx.rotate(horseshoe.spinAngle);
+
+      // Placeholder shape: a brown "U" arc standing in for a horseshoe sprite
+      ctx.beginPath();
+      ctx.arc(0, 0, horseshoe.radius, 0.3 * Math.PI, 1.7 * Math.PI);
+      ctx.strokeStyle = "#8d6e63";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  }
+
+  // Draws all active arrows. Each one rotates to match its fixed travel
+  // direction (set once at spawn), unlike the horseshoe's independent spin.
+  renderArrows(arrows) {
+    const ctx = this.ctx;
+
+    for (const arrow of arrows) {
+      if (!arrow.alive) continue;
+
+      ctx.save();
+      ctx.translate(arrow.position.x, arrow.position.y);
+      ctx.rotate(arrow.travelAngle);
+
+      // Placeholder shape: a simple green line with an arrowhead, pointing
+      // along its travel direction (since we rotated the canvas, "forward"
+      // is always the positive x-axis here)
+      ctx.strokeStyle = "#43a047";
+      ctx.fillStyle = "#43a047";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(-10, 0);
+      ctx.lineTo(6, 0);
+      ctx.stroke();
+
+      // Arrowhead triangle at the front tip
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(4, -3);
+      ctx.lineTo(4, 3);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+  }
+
   // Temporary stand-in for the orbiting weapon sprite — just a small triangle
   // pointing in facingAngle, sitting just outside the ball's edge.
   // Will be replaced by actual weapon icons in Phase 2.
