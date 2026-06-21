@@ -19,7 +19,7 @@ class Horseshoe {
     this.alive = true;
 
     this.wallBounceCount = 0;
-    this.hitThisLeg = new Set(); // tracks which balls already took damage THIS leg
+    this.hasHit = false; // becomes true the moment ANY hit lands, for the horseshoe's whole life
 
     this.spinAngle = 0; // purely visual
   }
@@ -29,8 +29,11 @@ class Horseshoe {
 
     const cfg = CONFIG.characters.farrier;
 
-    this.position = Vector2.add(this.position, Vector2.scale(this.velocity, deltaSeconds));
-    this.spinAngle += (cfg.spinDegPerSec * Math.PI / 180) * deltaSeconds;
+    this.position = Vector2.add(
+      this.position,
+      Vector2.scale(this.velocity, deltaSeconds),
+    );
+    this.spinAngle += ((cfg.spinDegPerSec * Math.PI) / 180) * deltaSeconds;
 
     this._resolveWallBounce(arena);
   }
@@ -72,13 +75,16 @@ class Horseshoe {
     }
   }
 
-  // Call this every frame for every (horseshoe, ball) pair to check overlap.
-  // Returns true if a NEW hit landed (caller should know damage was applied).
+  // Returns true if a NEW hit landed. Once ANY hit lands, the horseshoe
+  // is immediately spent — no more damage for the rest of its life,
+  // regardless of remaining bounces. Bounces still happen visually/physically
+  // (it keeps bouncing until its 2-bounce lifespan ends), but it's now
+  // harmless — purely a "missed" object coasting to its own deletion.
   checkHit(targetBall, nowMs) {
     if (!this.alive) return false;
+    if (this.hasHit) return false; // already used up its one hit, ever
     if (targetBall === this.ownerBall) return false;
     if (!targetBall.alive) return false;
-    if (this.hitThisLeg.has(targetBall)) return false; // already hit this ball THIS leg
 
     const dist = Vector2.distance(this.position, targetBall.position);
     if (dist >= this.radius + targetBall.radius) return false;
@@ -86,12 +92,12 @@ class Horseshoe {
     const applied = targetBall.takeDamage(
       CONFIG.characters.farrier.damage,
       nowMs,
-      CONFIG.ball.hitInvulnMs
+      CONFIG.ball.hitInvulnMs,
     );
 
-    if (!applied) return false; // target was in ITS OWN invuln window (separate system)
+    if (!applied) return false; // target was invuln, hit didn't count, horseshoe still "live"
 
-    this.hitThisLeg.add(targetBall);
+    this.hasHit = true; // spent — no further damage capability, ever
     return true;
   }
 }
