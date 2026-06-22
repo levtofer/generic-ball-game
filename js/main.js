@@ -24,37 +24,85 @@ function randomLaunchVelocity() {
   return Vector2.fromAngle(angle, CONFIG.ball.launchSpeed);
 }
 
-function randomSpawnPosition() {
-  const r = CONFIG.ball.radius;
-  const margin = r * 3;
-  return {
-    x: margin + Math.random() * (CONFIG.arena.width - margin * 2),
-    y: margin + Math.random() * (CONFIG.arena.height - margin * 2),
-  };
+// CHANGED — was randomSpawnPosition(), now computes a position on a circle
+// around the arena center based on interleaved team order + total count.
+// Launch velocity stays fully random — only the starting position is fixed.
+function getOrbitSpawnPositions(selections) {
+  const centerX = CONFIG.arena.width / 2;
+  const centerY = CONFIG.arena.height / 2;
+
+  // Spawn ring radius — far enough from center that balls don't immediately
+  // overlap at match start, but still comfortably inside the arena walls
+  const spawnRadius = Math.min(CONFIG.arena.width, CONFIG.arena.height) * 0.35;
+
+  // Build the interleaved red/blue/red/blue... order first
+  const redList = selections.red.map((characterId) => ({
+    teamId: "red",
+    characterId,
+  }));
+  const blueList = selections.blue.map((characterId) => ({
+    teamId: "blue",
+    characterId,
+  }));
+  const interleaved = [];
+  const maxLen = Math.max(redList.length, blueList.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (redList[i]) interleaved.push(redList[i]);
+    if (blueList[i]) interleaved.push(blueList[i]);
+  }
+
+  const totalCount = interleaved.length;
+  const angleStep = (Math.PI * 2) / totalCount;
+
+  // Map each entry to its computed x/y so startMatch can look it up by
+  // matching teamId + characterId + occurrence order
+  return interleaved.map((entry, index) => {
+    const angle = angleStep * index;
+    return {
+      teamId: entry.teamId,
+      characterId: entry.characterId,
+      x: centerX + Math.cos(angle) * spawnRadius,
+      y: centerY + Math.sin(angle) * spawnRadius,
+      facingAngle: angle + Math.PI, // NEW — face inward, toward center
+    };
+  });
 }
 
 // Called by MenuController when "Start Match" is clicked.
 // `selections` looks like { red: ["lapidary", "farrier"], blue: ["chandler"] }
 function startMatch(selections) {
-  // Reset all match state fresh
   balls = [];
   activeHorseshoes = [];
   activeArrows = [];
   activeWaxPools = [];
 
+  // NEW — compute all spawn positions up front, in interleaved order
+  const spawnPlan = getOrbitSpawnPositions(selections);
+
+  // NEW — group spawnPlan back by team so lookup is safe regardless of
+  // the order startMatch's own loop walks teams/characters in
+  const spawnsByTeam = {
+    red: spawnPlan.filter((s) => s.teamId === "red"),
+    blue: spawnPlan.filter((s) => s.teamId === "blue"),
+  };
+  const teamSpawnIndex = { red: 0, blue: 0 };
+
   for (const teamId of ["red", "blue"]) {
     for (const characterId of selections[teamId]) {
-      const spawn = randomSpawnPosition();
+      const spawn = spawnsByTeam[teamId][teamSpawnIndex[teamId]]; // CHANGED
+      teamSpawnIndex[teamId]++;
+
       const cfg = CONFIG.characters[characterId];
       const ball = new Ball({
         x: spawn.x,
         y: spawn.y,
-        velocity: randomLaunchVelocity(),
+        velocity: randomLaunchVelocity(), // unchanged — launch stays random
         radius: CONFIG.ball.radius,
         hp: cfg.hp,
         characterId: characterId,
         color: cfg.color,
         teamId: teamId,
+        facingAngle: spawn.facingAngle, // NEW
       });
       balls.push(ball);
     }

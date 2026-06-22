@@ -16,7 +16,11 @@ const HudRenderer = {
     for (const ball of visibleBalls) {
       const panel = document.createElement("div");
       panel.className = "hud-panel";
-      panel.dataset.ballId = ball.id; // CHANGED — unique id, not characterId
+      panel.dataset.ballId = ball.id;
+
+      // NEW — set this panel's team color as a CSS variable
+      const teamColor = CONFIG.teamColors[ball.teamId];
+      panel.style.setProperty("--team-color", teamColor);
 
       const nameEl = document.createElement("div");
       nameEl.className = "hud-panel-name";

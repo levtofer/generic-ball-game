@@ -179,7 +179,7 @@ class Renderer {
     const cx = this.canvas.width / 2;
     const cy = this.canvas.height / 2;
 
-    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.fillStyle = "rgba(0, 0, 0, 0)";
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     ctx.textAlign = "center";

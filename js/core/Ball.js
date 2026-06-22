@@ -5,31 +5,39 @@
 let _nextBallId = 0;
 
 class Ball {
-  constructor({ x, y, velocity, radius, hp, characterId, color, teamId }) {
-    this.id = _nextBallId++; // unique per ball instance, even if characterId repeats
+  constructor({
+    x,
+    y,
+    velocity,
+    radius,
+    hp,
+    characterId,
+    color,
+    teamId,
+    facingAngle = 0,
+  }) {
+    // CHANGED — added facingAngle param
+    this.id = _nextBallId++;
     this.position = Vector2.create(x, y);
-    this.velocity = velocity; // {x, y}, already at launchSpeed magnitude
+    this.velocity = velocity;
     this.radius = radius;
-    this.teamId = teamId; // NEW — "red" or "blue"
+    this.teamId = teamId;
 
-    this.characterId = characterId; // "lapidary" | "farrier" | "fletcher" | "chandler"
-    this.color = color; // placeholder fill color until real sprites exist
+    this.characterId = characterId;
+    this.color = color;
 
     this.maxHp = hp;
     this.hp = hp;
     this.alive = true;
 
-    this.lastHitAtMs = -Infinity; // NEW — never hit yet, so flash check always fails safely
+    this.lastHitAtMs = -Infinity;
 
-    // Facing — independent of velocity, driven by nearest-enemy angle each frame
-    this.facingAngle = 0; // radians
+    // Facing — independent of velocity, driven by nearest-enemy angle each frame.
+    // Initial value comes from spawn placement (e.g. facing center), then
+    // AIController takes over once the match actually starts.
+    this.facingAngle = facingAngle; // CHANGED — was hardcoded 0
 
-    // Anti-spam: timestamp (ms) until this ball can be damaged again
     this.invulnUntil = 0;
-
-    // Character-specific ability state lives in a generic bucket.
-    // Each character module reads/writes its own keys here
-    // (e.g. lapidary uses abilityState.hitsLanded, abilityState.cooldownUntil)
     this.abilityState = {};
   }
 

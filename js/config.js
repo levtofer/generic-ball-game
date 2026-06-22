@@ -8,6 +8,12 @@ const CONFIG = {
     height: 345,
   },
 
+  // config.js — add this near the top, alongside your other shared constants
+  teamColors: {
+    red: "#e53935",
+    blue: "#1e88e5",
+  },
+
   // ── Ball / Physics ─────────────────────────────────────
   ball: {
     radius: 22,

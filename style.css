@@ -67,7 +67,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  overflow: hidden; /* safety net, prevents content from spilling past its row */
+  overflow: hidden;
+  border: 2px solid var(--team-color, #888); /* NEW */
 }
 
 .hud-panel.faded {
@@ -79,7 +80,7 @@ body {
 }
 
 .hud-panel-name {
-  color: #CB2957;
+  color: var(--team-color, #CB2957); /* CHANGED — was hardcoded #CB2957 */
   text-decoration: underline;
   font-weight: bold;
   font-size: 11px;
@@ -107,7 +108,7 @@ body {
 .hud-panel-info {
   flex: 1;
   background: #EEEEEE;
-  border: 1px solid #CB2957;
+  border: 1px solid var(--team-color, #CB2957);
   border-radius: 4px;
   font-size: 8px;
   color: #000000;
